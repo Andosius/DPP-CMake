@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.10)
 
 include(FetchContent)
 
@@ -12,23 +12,27 @@ else()
 endif()
 
 
-
+# System Info
 set(DPP_CMAKE_ARCH "")
 set(DPP_CMAKE_OS "")
 set(DPP_CMAKE_FILE_ENDING "")
 set(DPP_CMAKE_WINDOWS_VS "")
 
+# Target file (/array)
 set(DPP_CMAKE_DOWNLOAD_FILE)
 
+# Debug configuration paths
 set(DPP_CONF_DEBUG_BIN "")
 set(DPP_CONF_DEBUG_INC "")
 set(DPP_CONF_DEBUG_LIB "")
 
+# Release configuration paths
 set(DPP_CONF_RELEASE_BIN "")
 set(DPP_CONF_RELEASE_INC "")
 set(DPP_CONF_RELEASE_LIB "")
 
-# Set all the required vars before proceeding
+
+# Start collecting system information
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	message(FATAL_ERROR "D++ has no macOS packages available!")
 	
@@ -42,6 +46,14 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 			OUTPUT_VARIABLE DPP_OUTPUT_ARCH
 			OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
+		
+		if(${DPP_OUTPUT_ARCH} STREQUAL "unknown")
+			execute_process(
+				COMMAND "uname" "-m"
+				OUTPUT_VARIABLE DPP_OUTPUT_ARCH
+				OUTPUT_STRIP_TRAILING_WHITESPACE
+			)
+		endif()
 		
 		# Process architecture types
 		if(DPP_OUTPUT_ARCH STREQUAL "i386" OR DPP_OUTPUT_ARCH STREQUAL "x86")
@@ -81,6 +93,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		set(DPP_CMAKE_ARCH "32")
 	endif()
 	
+	# TODO: Add command line recognition
 	# Check which Visual Studio version we are using: vs2019 or 2022
 	if(CMAKE_GENERATOR_TOOLSET MATCHES "v142")
 		set(DPP_CMAKE_WINDOWS_VS "vs2019")
@@ -96,28 +109,39 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	list(APPEND DPP_CMAKE_DOWNLOAD_FILE "libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}-release-${DPP_CMAKE_WINDOWS_VS}.${DPP_CMAKE_FILE_ENDING}")
 endif()
 
+
+# Prepare base download link for integration
 set(DPP_DOWNLOAD_BASE_URL "https://github.com/brainboxdotcc/DPP/releases/download/v${DPP_VERSION}")
 
+
+# Download and install packages based on OS
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	if(NOT DPP_CMAKE_DOWNLOAD_FILE STREQUAL "")
 	
+		# Download file to <base_dir>/download directory
 		set(DPP_DOWNLOAD_URL "${DPP_DOWNLOAD_BASE_URL}/${DPP_CMAKE_DOWNLOAD_FILE}")
 		set(DPP_DOWNLOAD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/download")
 		
+		# Set full path to package
 		set(DPP_DOWNLOAD_LIB_PATH "${DPP_DOWNLOAD_DIR}/${DPP_CMAKE_DOWNLOAD_FILE}")
 		
+		# Create directory if it does not exist
 		execute_process(COMMAND "mkdir" "-p" "${DPP_DOWNLOAD_DIR}")		
 		execute_process(COMMAND "wget" "${DPP_DOWNLOAD_URL}" "-O" "${DPP_DOWNLOAD_LIB_PATH}")
 		
+		# Debian routine
 		if(${DPP_DOWNLOAD_LIB_PATH} MATCHES ".*\\.deb$")
+			#execute_process(COMMAND "sudo" "apt" "install" "libsodium23" "libopus-dev")
 			execute_process(COMMAND "sudo" "dpkg" "-i" "${DPP_DOWNLOAD_LIB_PATH}")
 			execute_process(COMMAND "sudo" "apt-get" "-f" "install" "-y")
-			
+		
+		# Error on .rpm machines for now as tjhe integration seems very "unclean"
 		elseif(${DPP_DOWNLOAD_LIB_PATH} MATCHES ".*\\.rpm$")
 			message(FATAL_ERROR ".rpm file detected! Please be aware that this script does not provide any additional functionality to support these packages! The .rpm file is located at: ${DPP_DOWNLOAD_LIB_PATH}")
 		
 		endif()
 		
+		# Set include directory only as we don't need to copy dependencies and can access lib via "dpp"
 		set(DPP_CONF_RELEASE_BIN "")
 		set(DPP_CONF_RELEASE_INC "/usr/include")
 		set(DPP_CONF_RELEASE_LIB "")
@@ -125,31 +149,32 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	# Loop through DPP_CMAKE_DOWNLOAD_FILE as we know it has atleast the debug and release conf build
-	
 	foreach(lib ${DPP_CMAKE_DOWNLOAD_FILE})
 		set(file_name ${lib})
 	
+		# Prepare download for each item inside array
 		FetchContent_Declare(
 			${file_name}
 			URL "${DPP_DOWNLOAD_BASE_URL}/${file_name}"
 			DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 		)
 		
+		# Fetch item information
 		FetchContent_GetProperties(${file_name})
 		if(NOT ${file_name}_POPULATED)
+			# Download and save unpacked location
 			FetchContent_Populate(${file_name})
-			
 			set(DPP_LIB_PATH ${${file_name}_SOURCE_DIR})
 
 			string(FIND ${file_name} "debug" DEBUG_FOUND)
 			
-			# Check for release mode
+			# Check for release conf
 			if(DEBUG_FOUND EQUAL -1)
 				set(DPP_CONF_RELEASE_BIN "${DPP_LIB_PATH}/bin")
 				set(DPP_CONF_RELEASE_INC "${DPP_LIB_PATH}/include/dpp-${DPP_DIR_VERSION}")
 				set(DPP_CONF_RELEASE_LIB "${DPP_LIB_PATH}/lib/dpp-${DPP_DIR_VERSION}/dpp.lib")
 			
-			# Set debug mode
+			# Check for debug conf
 			else()
 				set(DPP_CONF_DEBUG_BIN "${DPP_LIB_PATH}/bin")
 				set(DPP_CONF_DEBUG_INC "${DPP_LIB_PATH}/include/dpp-${DPP_DIR_VERSION}")
