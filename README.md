@@ -9,7 +9,7 @@
 </div>
   
 ### About this project
-The "DPP-CMake" project is an extension for your CMake build system that makes it easier to incorporate the ![Discord C++ library D++](https://github.com/brainboxdotcc/DPP) into your project.
+The "DPP-CMake" project is an extension for your CMake build system that makes it easier to incorporate the [Discord C++ library D++](https://github.com/brainboxdotcc/DPP) into your project.
 Currently, the script is guaranteed to work on the following devices:
 - x64 Linux (Debian/Ubuntu)
 - x64 Windows
