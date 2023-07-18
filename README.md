@@ -22,7 +22,7 @@ Currently, the script is guaranteed to work on the following devices:
 2. Create an executable `add_executable("DPPBot" <source_files>)` and call `DPP_ConfigureTarget("DPPBot")` on your target. 
 5. Done! Easy as that! Depending on your OS and Architecture you are ready to go. 
 
-### Known problems
+### Known issues
 At the current stage we can't support any 64-bit Raspberry PI OSes! Please be aware that this is not caused by me or DPP.  
 aarch64 and arm64 are synonyms for eachother and due to a bug the library expects aarch64 which is not possible to add to dpkg architecture list.
 
