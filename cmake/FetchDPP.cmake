@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-include(FetchContent)
-
 
 set(DPP_DIR_VERSION "")
 
@@ -18,7 +16,7 @@ set(DPP_CMAKE_OS "")
 set(DPP_CMAKE_FILE_ENDING "")
 set(DPP_CMAKE_WINDOWS_VS "")
 
-# Target file (/array)
+# Target file (/array for Windows)
 set(DPP_CMAKE_DOWNLOAD_FILE)
 
 # Debug configuration paths
@@ -95,9 +93,9 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	
 	# TODO: Add command line recognition
 	# Check which Visual Studio version we are using: vs2019 or 2022
-	if(CMAKE_GENERATOR_TOOLSET MATCHES "v142")
+	if(CMAKE_GENERATOR_TOOLSET MATCHES "v142" OR CMAKE_GENERATOR MATCHES "Visual Studio 16 2019")
 		set(DPP_CMAKE_WINDOWS_VS "vs2019")
-	elseif(CMAKE_GENERATOR_TOOLSET MATCHES "v143")
+	elseif(CMAKE_GENERATOR_TOOLSET MATCHES "v143" OR CMAKE_GENERATOR MATCHES "Visual Studio 17 2022")
 		set(DPP_CMAKE_WINDOWS_VS "vs2022")
 	else()
 		message(FATAL_ERROR "This script does not support your generator toolset: ${CMAKE_GENERATOR_TOOLSET}!")
@@ -105,8 +103,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	
 	set(DPP_CMAKE_FILE_ENDING "zip")
 	
-	list(APPEND DPP_CMAKE_DOWNLOAD_FILE "libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}-debug-${DPP_CMAKE_WINDOWS_VS}.${DPP_CMAKE_FILE_ENDING}")
-	list(APPEND DPP_CMAKE_DOWNLOAD_FILE "libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}-release-${DPP_CMAKE_WINDOWS_VS}.${DPP_CMAKE_FILE_ENDING}")
+	set(DPP_CMAKE_DOWNLOAD_FILE "libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}-CONFIGURATION-${DPP_CMAKE_WINDOWS_VS}.${DPP_CMAKE_FILE_ENDING}")
 endif()
 
 
@@ -127,7 +124,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 		
 		# Create directory if it does not exist
 		execute_process(COMMAND "mkdir" "-p" "${DPP_DOWNLOAD_DIR}")		
-		execute_process(COMMAND "wget" "${DPP_DOWNLOAD_URL}" "-O" "${DPP_DOWNLOAD_LIB_PATH}")
+		execute_process(COMMAND "curl" "${DPP_DOWNLOAD_URL}" "-o" "${DPP_DOWNLOAD_LIB_PATH}")
 		
 		# Debian routine
 		if(${DPP_DOWNLOAD_LIB_PATH} MATCHES ".*\\.deb$")
@@ -148,42 +145,63 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	endif()
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	# Loop through DPP_CMAKE_DOWNLOAD_FILE as we know it has atleast the debug and release conf build
-	foreach(lib ${DPP_CMAKE_DOWNLOAD_FILE})
-		set(file_name ${lib})
+	# Download files to <base_dir>/download directory
+	set(DPP_DOWNLOAD_URL "${DPP_DOWNLOAD_BASE_URL}/${DPP_CMAKE_DOWNLOAD_FILE}")
+	set(DPP_DOWNLOAD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/download")
 	
-		# Prepare download for each item inside array
-		FetchContent_Declare(
-			${file_name}
-			URL "${DPP_DOWNLOAD_BASE_URL}/${file_name}"
-			DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-		)
-		
-		# Fetch item information
-		FetchContent_GetProperties(${file_name})
-		if(NOT ${file_name}_POPULATED)
-			# Download and save unpacked location
-			FetchContent_Populate(${file_name})
-			set(DPP_LIB_PATH ${${file_name}_SOURCE_DIR})
+	# Set download URL
+	string(REPLACE "CONFIGURATION" "debug" DPP_DOWNLOAD_URL_DEBUG ${DPP_DOWNLOAD_URL})
+	string(REPLACE "CONFIGURATION" "release" DPP_DOWNLOAD_URL_RELEASE ${DPP_DOWNLOAD_URL})
+	
+	# Set file download name
+	string(REPLACE "CONFIGURATION" "debug" DPP_DOWNLOAD_FILE_DEBUG ${DPP_CMAKE_DOWNLOAD_FILE})
+	string(REPLACE "CONFIGURATION" "release" DPP_DOWNLOAD_FILE_RELEASE ${DPP_CMAKE_DOWNLOAD_FILE})
+	
+	set(DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG "${DPP_DOWNLOAD_DIR}\\${DPP_DOWNLOAD_FILE_DEBUG}")
+	set(DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE "${DPP_DOWNLOAD_DIR}\\${DPP_DOWNLOAD_FILE_RELEASE}")
+	
+	# Escape directory path
+	string(REPLACE "/" "\\" DPP_DOWNLOAD_DIR ${DPP_DOWNLOAD_DIR})
+	
+	# Set the inner zip file directory
+	set(DPP_CMAKE_INNER_DIR "libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}")
+	
+	# Set the usable path
+	set(DPP_DEBUG_PATH "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}-src\\${DPP_CMAKE_INNER_DIR}")
+	set(DPP_RELEASE_PATH "${DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE}-src\\${DPP_CMAKE_INNER_DIR}")
+	
+	# Set required setup information
+	set(DPP_CONF_DEBUG_BIN "${DPP_DEBUG_PATH}\\bin")
+	set(DPP_CONF_DEBUG_INC "${DPP_DEBUG_PATH}\\include\\dpp-${DPP_DIR_VERSION}")
+	set(DPP_CONF_DEBUG_LIB "${DPP_DEBUG_PATH}\\lib\\dpp-${DPP_DIR_VERSION}\\dpp.lib")
 
-			string(FIND ${file_name} "debug" DEBUG_FOUND)
-			
-			# Check for release conf
-			if(DEBUG_FOUND EQUAL -1)
-				set(DPP_CONF_RELEASE_BIN "${DPP_LIB_PATH}/bin")
-				set(DPP_CONF_RELEASE_INC "${DPP_LIB_PATH}/include/dpp-${DPP_DIR_VERSION}")
-				set(DPP_CONF_RELEASE_LIB "${DPP_LIB_PATH}/lib/dpp-${DPP_DIR_VERSION}/dpp.lib")
-			
-			# Check for debug conf
-			else()
-				set(DPP_CONF_DEBUG_BIN "${DPP_LIB_PATH}/bin")
-				set(DPP_CONF_DEBUG_INC "${DPP_LIB_PATH}/include/dpp-${DPP_DIR_VERSION}")
-				set(DPP_CONF_DEBUG_LIB "${DPP_LIB_PATH}/lib/dpp-${DPP_DIR_VERSION}/dpp.lib")
-			endif()
+	set(DPP_CONF_RELEASE_BIN "${DPP_RELEASE_PATH}\\bin")
+	set(DPP_CONF_RELEASE_INC "${DPP_RELEASE_PATH}\\include\\dpp-${DPP_DIR_VERSION}")
+	set(DPP_CONF_RELEASE_LIB "${DPP_RELEASE_PATH}\\lib\\dpp-${DPP_DIR_VERSION}\\dpp.lib")
+	
+	
+	if(NOT EXISTS "${DPP_DOWNLOAD_DIR}")
+		# Find Powershell executable
+		find_program(POWERSHELL_PATH NAMES powershell)
 		
-		endif()
-
-	endforeach()
+		# Create directory if it does not exist
+		execute_process(COMMAND "${POWERSHELL_PATH}" "New-Item" "-ItemType" "Directory" "-Path" "${DPP_DOWNLOAD_DIR}")
+		
+		# Set output vars to wait for the process to finish
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Invoke-WebRequest" "-Uri" "\"${DPP_DOWNLOAD_URL_DEBUG}\"" "-OutFile" "\"${DPP_DOWNLOAD_DIR}\\${DPP_DOWNLOAD_FILE_DEBUG}\"")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Invoke-WebRequest" "-Uri" "\"${DPP_DOWNLOAD_URL_RELEASE}\"" "-OutFile" "\"${DPP_DOWNLOAD_DIR}\\${DPP_DOWNLOAD_FILE_RELEASE}\"")
+	
+		# Extract files and delete archives
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Expand-Archive" "-Path" "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}" "-DestinationPath" "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}-src")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Expand-Archive" "-Path" "${DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE}" "-DestinationPath" "${DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE}-src")
+		
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE}")
+		
+		# Delete cmake directory, we won't use it anyway
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_DEBUG_PATH}\\lib\\cmake" "-Recurse")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_RELEASE_PATH}\\lib\\cmake" "-Recurse")
+	endif()
 endif()
 
 
@@ -197,7 +215,7 @@ function(DPP_ConfigureTarget target_name)
 	
 	target_compile_options("${target_name}" PUBLIC
 		"$<$<PLATFORM_ID:Windows>:/bigobj;/sdl;/std:c++17;/Zc:preprocessor;/MP;>"
-		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Debug>:/Od;/sdl;>>"
+		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Debug>:/Od;/sdl;/DEBUG>>"
 		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Release>:/O2;/Oi;/Oy;/GL;/Gy;>>"
 		
 		"$<$<PLATFORM_ID:Linux>:-std=c++17;-Wall;-Wempty-body;-Wno-psabi;-Wunknown-pragmas;-Wignored-qualifiers;-Wimplicit-fallthrough;-Wmissing-field-initializers;-Wsign-compare;-Wtype-limits;-Wuninitialized;-Wshift-negative-value;-pthread;-fPIC;>"
@@ -222,29 +240,15 @@ function(DPP_ConfigureTarget target_name)
 		
 		"$<$<PLATFORM_ID:Linux>:dpp>"
 	)
+
+	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+		set(copy_target "${DPP_DOWNLOAD_DIR}\\libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}-$(Configuration.toLower())-${DPP_CMAKE_WINDOWS_VS}.${DPP_CMAKE_FILE_ENDING}-src\\${DPP_CMAKE_INNER_DIR}\\bin\\*.dll")
 	
-	# Copy all debug .dll files to output folder
-	FILE(GLOB DEPS "${DPP_CONF_DEBUG_BIN}/*.dll")
-	foreach(cur_file ${DEPS})
-		get_filename_component(file_name ${cur_file} NAME)
-		
-		add_custom_target(CopyDLL_Debug_${file_name} ALL
-			COMMAND ${CMAKE_COMMAND} -E copy "$<$<CONFIG:Debug>:${cur_file}>" "$(OutDir)"
-			QUIET TRUE
+		add_custom_command(TARGET ${target_name} POST_BUILD
+			COMMAND xcopy /Y /Q ${copy_target} $(OutDir)
+			COMMENT "Copy all D++ dependencies."
 		)
 		
-	endforeach()
-	
-	# Copy all release .dll files to output folder
-	FILE(GLOB DEPS "${DPP_CONF_RELEASE_BIN}/*.dll")
-	foreach(cur_file ${DEPS})
-		get_filename_component(file_name ${cur_file} NAME)
-		
-		add_custom_target(CopyDLL_Release_${file_name} ALL
-			COMMAND ${CMAKE_COMMAND} -E copy "$<$<CONFIG:Release>:${cur_file}>" "$(OutDir)"
-			QUIET TRUE
-		)
-		
-	endforeach()
+	endif()
 
 endfunction()
