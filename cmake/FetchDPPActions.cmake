@@ -5,7 +5,7 @@ function(DPP_BuildFromSourceUnix)
 	execute_process(COMMAND "mkdir" "-p" "${DPP_BUILD_HOME}")
 
 	# Get the repository for the predefined version
-	execute_process(COMMAND "git" "clone" "-b" "${DPP_VERSION}" "https://github.com/brainboxdotcc/DPP" "${DPP_BUILD_HOME}")
+	execute_process(COMMAND "git" "clone" "-b" "v${DPP_VERSION}" "https://github.com/brainboxdotcc/DPP" "${DPP_BUILD_HOME}")
 	
 	# Prepare build files
 	execute_process(COMMAND "cmake" "-B" "${DPP_BUILD_HOME}/build" "-DDPP_NO_VCPKG=ON" "-DCMAKE_BUILD_TYPE=Release")
