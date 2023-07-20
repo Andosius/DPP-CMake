@@ -31,10 +31,12 @@ RedHat/CentOS or similar OSes are not supported yet. Feel free to create a PR!
 ### macOS dependencies
 To run the standard routine you need the following packages. You can install them by running:  
 
-`UNKNOWN`
-
+`brew install git cmake make gcc libsodium libopusenc zlib openssl ninja pkg-config`
 You can bypass the macOS warning by specifying `-DDPP_SYSTEM_DARWIN_PREINSTALLED=ON`. This check is meant to make people aware of the unknown macOS state.  
-**Please** contribute to the project to make it universally secure. I don't have any Apple product I can test it on. Good luck!
+**Please** contribute to the project to make it an universally good resource. I don't have any Apple product I can test it. Good luck!
+The installation command does not contain g++, I was not able to find it.  
+
+I'd recommend it to install Xcode `xcode-select --install`.
 
 ### Usage
 1. Add the `cmake` directory to your directory structure
