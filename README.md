@@ -41,7 +41,9 @@ You can bypass the macOS warning by specifying `-DDPP_SYSTEM_DARWIN_PREINSTALLED
 2. Include the file (`include(cmake/FetchDPP.cmake)`). Don't change the path, it may include files by itself, it will break!
 2. Set the DPP release you want to use - example: `set(DPP_VERSION "10.0.24")`
 2. Create an executable `add_executable("DPPBot" <source_files>)` and call `DPP_ConfigureTarget("DPPBot")` on your target. 
-5. Done! Easy as that! Depending on your OS and Architecture you are ready to go.
+5. Done! Easy as that! Depending on your OS and Architecture you are ready to go.  
+  
+You can change the values of `DPP_NO_VCPKG` to enable VCPKG build (this is not supported tho) and `DPP_CORO` to enable coroutines. Both accept "ON" and "OFF" as values.
 
 ### Building
 Go into your project directory, create a new directory called `build` and run `cmake ..` inside of it.
