@@ -9,15 +9,18 @@ else()
 	string(REGEX MATCH "([0-9]+\\.[0-9]+)" DPP_DIR_VERSION ${DPP_VERSION})
 endif()
 
+# Get build functions, may be expanded in future
+include(cmake/FetchDPPActions.cmake)
+
 
 # System Info
-set(DPP_CMAKE_ARCH "")
-set(DPP_CMAKE_OS "")
-set(DPP_CMAKE_FILE_ENDING "")
-set(DPP_CMAKE_WINDOWS_VS "")
+set(DPP_SYSTEM_ARCH "")
+set(DPP_SYSTEM_OS "")
+set(DPP_SYSTEM_FILE_ENDING "")
+set(DPP_SYSTEM_WINDOWS_VS "")
 
 # Target file (/array for Windows)
-set(DPP_CMAKE_DOWNLOAD_FILE)
+set(DPP_TARGET_DOWNLOAD_FILE)
 
 # Debug configuration paths
 set(DPP_CONF_DEBUG_BIN "")
@@ -32,11 +35,20 @@ set(DPP_CONF_RELEASE_LIB "")
 
 # Start collecting system information
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-	message(FATAL_ERROR "D++ has no macOS packages available!")
+	if(NOT DPP_SYSTEM_DARWIN_PREINSTALLED)
+		message(SEND_ERROR "D++ has no macOS packages available! Make sure to install all required build tools first!")
+		message(FATAL_ERROR "Set '-DDPP_SYSTEM_DARWIN_PREINSTALLED=ON' to bypass this warning and build libdpp from source!")
+	else()
+		DPP_BuildFromSourceUnix()
+		
+		set(DPP_CONF_RELEASE_BIN "")
+		set(DPP_CONF_RELEASE_INC "/usr/include")
+		set(DPP_CONF_RELEASE_LIB "")
+	endif()
 	
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	if(NOT EXISTS "/usr/lib/libdpp.so")
-		set(DPP_CMAKE_OS "linux")
+		set(DPP_SYSTEM_OS "linux")
 
 		# Get Linux Architecture first
 		execute_process(
@@ -55,55 +67,54 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 		
 		# Process architecture types
 		if(DPP_OUTPUT_ARCH STREQUAL "i386" OR DPP_OUTPUT_ARCH STREQUAL "x86")
-			set(DPP_CMAKE_ARCH "i386")
+			set(DPP_SYSTEM_ARCH "i386")
 		elseif(DPP_OUTPUT_ARCH STREQUAL "armv6" OR DPP_OUTPUT_ARCH STREQUAL "armv6l")
-			set(DPP_CMAKE_OS "linux-rpi")
-			set(DPP_CMAKE_ARCH "arm6")
+			set(DPP_SYSTEM_OS "linux-rpi")
+			set(DPP_SYSTEM_ARCH "arm6")
 		elseif(DPP_OUTPUT_ARCH STREQUAL "aarch64" OR DPP_OUTPUT_ARCH STREQUAL "arm64")
-			set(DPP_CMAKE_OS "linux-rpi")
-			set(DPP_CMAKE_ARCH "arm64")
+			set(DPP_SYSTEM_OS "linux-rpi")
+			set(DPP_SYSTEM_ARCH "arm64")
 		elseif(DPP_OUTPUT_ARCH STREQUAL "armv7l" OR DPP_OUTPUT_ARCH STREQUAL "armhf")
-			set(DPP_CMAKE_OS "linux-rpi")
-			set(DPP_CMAKE_ARCH "arm7hf")
+			set(DPP_SYSTEM_OS "linux-rpi")
+			set(DPP_SYSTEM_ARCH "arm7hf")
 		elseif(DPP_OUTPUT_ARCH STREQUAL "x86_64" OR DPP_OUTPUT_ARCH STREQUAL "amd64")
-			set(DPP_CMAKE_ARCH "x64")
+			set(DPP_SYSTEM_ARCH "x64")
 		else()
 			message(FATAL_ERROR "D++ does not support your system: ${DPP_OUTPUT_ARCH}")
 		endif()
 
 		# Check if we are using .deb or .rpm archives, /etc/debian_version is a good indicator
 		if(EXISTS "/etc/debian_version")
-			set(DPP_CMAKE_FILE_ENDING "deb")
+			set(DPP_SYSTEM_FILE_ENDING "deb")
 		else()
-			set(DPP_CMAKE_FILE_ENDING "rpm")
+			set(DPP_SYSTEM_FILE_ENDING "rpm")
 		endif()
 	
-		set(DPP_CMAKE_DOWNLOAD_FILE "libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}-${DPP_CMAKE_ARCH}.${DPP_CMAKE_FILE_ENDING}")
+		set(DPP_TARGET_DOWNLOAD_FILE "libdpp-${DPP_VERSION}-${DPP_SYSTEM_OS}-${DPP_SYSTEM_ARCH}.${DPP_SYSTEM_FILE_ENDING}")
 	endif()
 	
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	set(DPP_CMAKE_OS "win")
+	set(DPP_SYSTEM_OS "win")
 
 	# Get Windows architecture
 	if($ENV{PROCESSOR_ARCHITECTURE} STREQUAL "AMD64")
-		set(DPP_CMAKE_ARCH "64")
+		set(DPP_SYSTEM_ARCH "64")
 	elseif($ENV{PROCESSOR_ARCHITECTURE STREQUAL "x86")
-		set(DPP_CMAKE_ARCH "32")
+		set(DPP_SYSTEM_ARCH "32")
 	endif()
 	
-	# TODO: Add command line recognition
 	# Check which Visual Studio version we are using: vs2019 or 2022
 	if(CMAKE_GENERATOR_TOOLSET MATCHES "v142" OR CMAKE_GENERATOR MATCHES "Visual Studio 16 2019")
-		set(DPP_CMAKE_WINDOWS_VS "vs2019")
+		set(DPP_SYSTEM_WINDOWS_VS "vs2019")
 	elseif(CMAKE_GENERATOR_TOOLSET MATCHES "v143" OR CMAKE_GENERATOR MATCHES "Visual Studio 17 2022")
-		set(DPP_CMAKE_WINDOWS_VS "vs2022")
+		set(DPP_SYSTEM_WINDOWS_VS "vs2022")
 	else()
 		message(FATAL_ERROR "This script does not support your generator toolset: ${CMAKE_GENERATOR_TOOLSET}!")
 	endif()
 	
-	set(DPP_CMAKE_FILE_ENDING "zip")
+	set(DPP_SYSTEM_FILE_ENDING "zip")
 	
-	set(DPP_CMAKE_DOWNLOAD_FILE "libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}-CONFIGURATION-${DPP_CMAKE_WINDOWS_VS}.${DPP_CMAKE_FILE_ENDING}")
+	set(DPP_TARGET_DOWNLOAD_FILE "libdpp-${DPP_VERSION}-${DPP_SYSTEM_OS}${DPP_SYSTEM_ARCH}-CONFIGURATION-${DPP_SYSTEM_WINDOWS_VS}.${DPP_SYSTEM_FILE_ENDING}")
 endif()
 
 
@@ -113,40 +124,57 @@ set(DPP_DOWNLOAD_BASE_URL "https://github.com/brainboxdotcc/DPP/releases/downloa
 
 # Download and install packages based on OS
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	if(NOT DPP_CMAKE_DOWNLOAD_FILE STREQUAL "")
+	# Download file to <base_dir>/download directory
+	set(DPP_DOWNLOAD_URL "${DPP_DOWNLOAD_BASE_URL}/${DPP_TARGET_DOWNLOAD_FILE}")
+	set(DPP_DOWNLOAD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/download")
 	
-		# Download file to <base_dir>/download directory
-		set(DPP_DOWNLOAD_URL "${DPP_DOWNLOAD_BASE_URL}/${DPP_CMAKE_DOWNLOAD_FILE}")
-		set(DPP_DOWNLOAD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/download")
-		
-		# Set full path to package
-		set(DPP_DOWNLOAD_LIB_PATH "${DPP_DOWNLOAD_DIR}/${DPP_CMAKE_DOWNLOAD_FILE}")
-		
-		# Create directory if it does not exist
-		execute_process(COMMAND "mkdir" "-p" "${DPP_DOWNLOAD_DIR}")		
-		execute_process(COMMAND "curl" "${DPP_DOWNLOAD_URL}" "-o" "${DPP_DOWNLOAD_LIB_PATH}")
-		
-		# Debian routine
-		if(${DPP_DOWNLOAD_LIB_PATH} MATCHES ".*\\.deb$")
-			#execute_process(COMMAND "sudo" "apt" "install" "libsodium23" "libopus-dev")
-			execute_process(COMMAND "sudo" "dpkg" "-i" "${DPP_DOWNLOAD_LIB_PATH}")
-			execute_process(COMMAND "sudo" "apt-get" "-f" "install" "-y")
-		
-		# Error on .rpm machines for now as tjhe integration seems very "unclean"
-		elseif(${DPP_DOWNLOAD_LIB_PATH} MATCHES ".*\\.rpm$")
-			message(FATAL_ERROR ".rpm file detected! Please be aware that this script does not provide any additional functionality to support these packages! The .rpm file is located at: ${DPP_DOWNLOAD_LIB_PATH}")
-		
-		endif()
-		
-		# Set include directory only as we don't need to copy dependencies and can access lib via "dpp"
-		set(DPP_CONF_RELEASE_BIN "")
-		set(DPP_CONF_RELEASE_INC "/usr/include")
-		set(DPP_CONF_RELEASE_LIB "")
+	# Set full path to package
+	set(DPP_DOWNLOAD_LIB_PATH "${DPP_DOWNLOAD_DIR}/${DPP_TARGET_DOWNLOAD_FILE}")
+	
+	# Abort for .rpm machines. Maybe I'll find a suitable way to support them in the future
+	if(NOT ${DPP_DOWNLOAD_LIB_PATH} MATCHES ".*\\.deb$")
+		message(FATAL_ERROR ".rpm-packages are currently not supported! We are working on a solution, feel free to contribute and help via Github Issues!")
 	endif()
+	
+	# Create directory if it does not exist
+	if(NOT EXISTS "${DPP_DOWNLOAD_DIR}")
+		execute_process(COMMAND "mkdir" "-p" "${DPP_DOWNLOAD_DIR}")
+		
+	# Download libdpp if the directory does not already contain it
+	elseif(EXISTS "${DPP_DOWNLOAD_DIR}" AND NOT EXISTS "${DPP_DOWNLOAD_LIB_PATH}")
+		execute_process(COMMAND "curl" "${DPP_DOWNLOAD_URL}" "-o" "${DPP_DOWNLOAD_LIB_PATH}")
+	endif()
+	
+	if(EXISTS "/etc/debian_version")
+		# Download Debian dependencies in case we have to build the project by source
+		execute_process(COMMAND "sudo" "apt-get" "-y" "install" "git" "make" "gcc" "g++" "libsodium-dev" "libopus-dev" "zlib1g-dev" "libssl-dev" "ninja-build" "pkg-config" "rpm")
+		
+		SET(DPP_DPKG_FAILURE OFF)
+		
+		# Check file first and try to install it and check for errors.
+		execute_process(COMMAND "sudo" "dpkg-deb" "--control" "${DPP_DOWNLOAD_LIB_PATH}" RESULT_VARIABLE exit_status)
+		
+		# Check if we got any errors -> build by source
+		# Status 1: A check or assertion command returned false.
+		# Status 2: Fatal or unrecoverable error due to invalid command-line usage, or interactions with the system, such as accesses to the database, memory allocations, etc.
+		if(exit_status EQUAL "1" OR exit_status EQUAL "2")
+			execute_process(COMMAND "sudo" "apt" "purge" "-y" "libdpp")
+			
+			DPP_BuildFromSourceUnix()
+		# Everything seems fine => install it
+		else()
+			execute_process(COMMAND "sudo" "dpkg" "-i" "${DPP_DOWNLOAD_LIB_PATH}" RESULT_VARIABLE exit_status)
+		endif()
+	endif()
+	
+	# Set include directory only as we don't need to copy dependencies and can access lib via "dpp"
+	set(DPP_CONF_RELEASE_BIN "")
+	set(DPP_CONF_RELEASE_INC "/usr/include")
+	set(DPP_CONF_RELEASE_LIB "")
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	# Download files to <base_dir>/download directory
-	set(DPP_DOWNLOAD_URL "${DPP_DOWNLOAD_BASE_URL}/${DPP_CMAKE_DOWNLOAD_FILE}")
+	set(DPP_DOWNLOAD_URL "${DPP_DOWNLOAD_BASE_URL}/${DPP_TARGET_DOWNLOAD_FILE}")
 	set(DPP_DOWNLOAD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/download")
 	
 	# Set download URL
@@ -154,8 +182,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	string(REPLACE "CONFIGURATION" "release" DPP_DOWNLOAD_URL_RELEASE ${DPP_DOWNLOAD_URL})
 	
 	# Set file download name
-	string(REPLACE "CONFIGURATION" "debug" DPP_DOWNLOAD_FILE_DEBUG ${DPP_CMAKE_DOWNLOAD_FILE})
-	string(REPLACE "CONFIGURATION" "release" DPP_DOWNLOAD_FILE_RELEASE ${DPP_CMAKE_DOWNLOAD_FILE})
+	string(REPLACE "CONFIGURATION" "debug" DPP_DOWNLOAD_FILE_DEBUG ${DPP_TARGET_DOWNLOAD_FILE})
+	string(REPLACE "CONFIGURATION" "release" DPP_DOWNLOAD_FILE_RELEASE ${DPP_TARGET_DOWNLOAD_FILE})
 	
 	set(DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG "${DPP_DOWNLOAD_DIR}\\${DPP_DOWNLOAD_FILE_DEBUG}")
 	set(DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE "${DPP_DOWNLOAD_DIR}\\${DPP_DOWNLOAD_FILE_RELEASE}")
@@ -164,7 +192,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	string(REPLACE "/" "\\" DPP_DOWNLOAD_DIR ${DPP_DOWNLOAD_DIR})
 	
 	# Set the inner zip file directory
-	set(DPP_CMAKE_INNER_DIR "libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}")
+	set(DPP_CMAKE_INNER_DIR "libdpp-${DPP_VERSION}-${DPP_SYSTEM_OS}${DPP_SYSTEM_ARCH}")
 	
 	# Set the usable path
 	set(DPP_DEBUG_PATH "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}-src\\${DPP_CMAKE_INNER_DIR}")
@@ -204,7 +232,6 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	endif()
 endif()
 
-
 function(DPP_ConfigureTarget target_name)
 
 	target_compile_definitions("${target_name}" PUBLIC
@@ -242,7 +269,7 @@ function(DPP_ConfigureTarget target_name)
 	)
 
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-		set(copy_target "${DPP_DOWNLOAD_DIR}\\libdpp-${DPP_VERSION}-${DPP_CMAKE_OS}${DPP_CMAKE_ARCH}-$(Configuration.toLower())-${DPP_CMAKE_WINDOWS_VS}.${DPP_CMAKE_FILE_ENDING}-src\\${DPP_CMAKE_INNER_DIR}\\bin\\*.dll")
+		set(copy_target "${DPP_DOWNLOAD_DIR}\\libdpp-${DPP_VERSION}-${DPP_SYSTEM_OS}${DPP_SYSTEM_ARCH}-$(Configuration.toLower())-${DPP_SYSTEM_WINDOWS_VS}.${DPP_SYSTEM_FILE_ENDING}-src\\${DPP_CMAKE_INNER_DIR}\\bin\\*.dll")
 	
 		add_custom_command(TARGET ${target_name} POST_BUILD
 			COMMAND xcopy /Y /Q ${copy_target} $(OutDir)
