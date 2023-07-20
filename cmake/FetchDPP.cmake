@@ -12,6 +12,9 @@ endif()
 # Get build functions, may be expanded in future
 include(cmake/FetchDPPActions.cmake)
 
+# DPP Configuration options
+option(DPP_NO_VCPKG "Enable or disable building for VCPKG" OFF)
+option(DPP_CORO "Enable or disable building coroutine features (>=C++20)" OFF)
 
 # System Info
 set(DPP_SYSTEM_ARCH "")
@@ -39,7 +42,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 		message(SEND_ERROR "D++ has no macOS packages available! Make sure to install all required build tools first!")
 		message(FATAL_ERROR "Set '-DDPP_SYSTEM_DARWIN_PREINSTALLED=ON' to bypass this warning and build libdpp from source!")
 	else()
-		DPP_BuildFromSourceUnix()
+		if(NOT EXISTS "/usr/lib/libdpp.so")
+			DPP_BuildFromSourceUnix()
+		endif()
 		
 		set(DPP_CONF_RELEASE_BIN "")
 		set(DPP_CONF_RELEASE_INC "/usr/include")
@@ -146,11 +151,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	endif()
 	
 	if(EXISTS "/etc/debian_version")
-		# Download Debian dependencies in case we have to build the project by source
-		execute_process(COMMAND "sudo" "apt-get" "-y" "install" "git" "make" "gcc" "g++" "libsodium-dev" "libopus-dev" "zlib1g-dev" "libssl-dev" "ninja-build" "pkg-config" "rpm")
-		
-		SET(DPP_DPKG_FAILURE OFF)
-		
 		# Check file first and try to install it and check for errors.
 		execute_process(COMMAND "sudo" "dpkg-deb" "--control" "${DPP_DOWNLOAD_LIB_PATH}" RESULT_VARIABLE exit_status)
 		
@@ -228,6 +228,22 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		
 		# Delete cmake directory, we won't use it anyway
 		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_DEBUG_PATH}\\lib\\cmake" "-Recurse")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_RELEASE_PATH}\\lib\\cmake" "-Recurse")
+	endif()
+	
+	# Check for debug directory only
+	if(EXISTS "${DPP_DOWNLOAD_DIR}" AND NOT EXISTS "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}-src")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Invoke-WebRequest" "-Uri" "\"${DPP_DOWNLOAD_URL_DEBUG}\"" "-OutFile" "\"${DPP_DOWNLOAD_DIR}\\${DPP_DOWNLOAD_FILE_DEBUG}\"")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Expand-Archive" "-Path" "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}" "-DestinationPath" "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}-src")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_CMAKE_DOWNLOAD_LOCATION_DEBUG}")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_DEBUG_PATH}\\lib\\cmake" "-Recurse")
+	endif()
+	
+	# Check for release directory only
+	if(EXISTS "${DPP_DOWNLOAD_DIR}" AND NOT EXISTS "${DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE}-src")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Invoke-WebRequest" "-Uri" "\"${DPP_DOWNLOAD_URL_RELEASE}\"" "-OutFile" "\"${DPP_DOWNLOAD_DIR}\\${DPP_DOWNLOAD_FILE_RELEASE}\"")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Expand-Archive" "-Path" "${DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE}" "-DestinationPath" "${DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE}-src")
+		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_CMAKE_DOWNLOAD_LOCATION_RELEASE}")
 		execute_process(COMMAND "${POWERSHELL_PATH}" "Remove-Item" "-Path" "${DPP_RELEASE_PATH}\\lib\\cmake" "-Recurse")
 	endif()
 endif()
