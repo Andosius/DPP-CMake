@@ -1,5 +1,5 @@
 <div align="center"><img src="https://github.com/brainboxdotcc/DPP/blob/master/docpages/DPP-markdown-logo.png?raw=true"/>
-<h1>D++ CMake Utility</h1>
+<h1>D++ CMake Cross Platform Utility</h1>
     <b>
         <p>An easy to use D++ setup script</p>
     </b>
@@ -13,20 +13,48 @@ The "DPP-CMake" project is an extension for your CMake build system that makes i
 Currently, the script is guaranteed to work on the following devices:
 - x64 Linux (Debian/Ubuntu)
 - x64 Windows
-- Raspberry Pi 4B (using 32-bit OSes)
-  
+- arm64 Linux (Debian/Ubuntu)
+- Raspberry Pi 4B (armhf native and aarch64/arm64 via auto build)
+
+### Windows dependencies
+To run the standard routine you need the following programs installed:
+- MSVC 2019 or MSVC 2022 (recommended) (https://visualstudio.microsoft.com/free-developer-offers/)
+	- Check "Desktop development with C++", this should contain everything you need (MSVC, CMake, MSBuild)
+
+### Debian/Ubuntu dependencies
+To run the standard routine you need the following packages. You can install them by running:  
+`sudo apt-get -y install git make cmake gcc g++ libsodium-dev libopus-dev zlib1g-dev libssl-dev ninja-build pkg-config rpm`
+
+### RedHat/CentOS
+RedHat/CentOS or similar OSes are not supported yet. Feel free to create a PR!
+
+### macOS dependencies
+To run the standard routine you need the following packages. You can install them by running:  
+
+`UNKNOWN`
+
+You can bypass the macOS warning by specifying `-DDPP_SYSTEM_DARWIN_PREINSTALLED=ON`. This check is meant to make people aware of the unknown macOS state.  
+**Please** contribute to the project to make it universally secure. I don't have any Apple product I can test it on. Good luck!
+
 ### Usage
-1. Add `cmake/FetchDPP.cmake` to your directory structure
-2. Include the file (`include(cmake/FetchDPP.cmake)`).
+1. Add the `cmake` directory to your directory structure
+2. Include the file (`include(cmake/FetchDPP.cmake)`). Don't change the path, it may include files by itself, it will break!
 2. Set the DPP release you want to use - example: `set(DPP_VERSION "10.0.24")`
 2. Create an executable `add_executable("DPPBot" <source_files>)` and call `DPP_ConfigureTarget("DPPBot")` on your target. 
-5. Done! Easy as that! Depending on your OS and Architecture you are ready to go. 
+5. Done! Easy as that! Depending on your OS and Architecture you are ready to go.
+
+### Building
+Go into your project directory, create a new directory called `build` and run `cmake ..` inside of it.
+This should auto-handle everything else for you.
+
+### Important notes
+Check [DPPs License](https://github.com/brainboxdotcc/DPP/blob/master/LICENSE) before building your project!
+This project is not guaranteed to work and is not part of brainboxdotcc or officially supported by them.
 
 ### Known issues
-At the current stage we can't support any 64-bit Raspberry PI OSes! Please be aware that this is not caused by me or DPP.  
-aarch64 and arm64 are synonyms for eachother and due to a bug the library expects aarch64 which is not possible to add to dpkg architecture list.
-
-To resolve this issue the Raspberry Pi will build DPP by its own. This is very slow but at the current time there is no other solution.
+Some builds may fail to install. DPP-CMake tries to auto-build `libdpp` from source. Depending of your systems power, this may take a while or not.  
+This issue is known on arm64 builds and will force DPP-CMake to build the project on its own.
+This is very slow (especially on a Raspberry Pi) but at the current time there is no other solution.
   
 ### Issues / Bugs
 Please open a new Github issue for every problem you encounter that is not based on failure getting DPP-CMake to run. I am happy to help.
