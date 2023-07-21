@@ -58,7 +58,7 @@ Check [DPPs License](https://github.com/brainboxdotcc/DPP/blob/master/LICENSE) b
 This project is not guaranteed to work and is not part of brainboxdotcc or officially supported by them.
 
 ### Known issues
-Some builds may fail to install. DPP-CMake tries to auto-build `libdpp` from source. Depending of your systems power, this may take a while or not.  
+Some builds may fail to install. DPP-CMake handles this by building `libdpp` by source. Depending of your systems power, this may take a while or not.  
 This issue is known on arm64 builds and will force DPP-CMake to build the project on its own.
 This is very slow (especially on a Raspberry Pi) but at the current time there is no other solution.
   
