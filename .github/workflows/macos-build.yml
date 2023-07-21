@@ -26,6 +26,4 @@ jobs:
         mkdir build
         cd build
         cmake ..
-    - name: Build test project
-      run: |
         cmake --build . -j
