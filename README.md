@@ -15,6 +15,7 @@ Currently, the script is guaranteed to work on the following devices:
 - x64 Windows
 - arm64 Linux (Debian/Ubuntu)
 - Raspberry Pi 4B (armhf native and aarch64/arm64 via auto build)
+- macOS (via Github Actions)
 
 ### Windows dependencies
 To run the standard routine you need the following programs installed:
@@ -30,13 +31,9 @@ RedHat/CentOS or similar OSes are not supported yet. Feel free to create a PR!
 
 ### macOS dependencies
 To run the standard routine you need the following packages. You can install them by running:  
-
 `brew install git cmake make gcc libsodium libopusenc zlib openssl ninja pkg-config`
-You can bypass the macOS warning by specifying `-DDPP_SYSTEM_DARWIN_PREINSTALLED=ON`. This check is meant to make people aware of the unknown macOS state.  
-**Please** contribute to the project to make it an universally good resource. I don't have any Apple product I can test it. Good luck!
-The installation command does not contain g++, I was not able to find it.  
-
-I'd recommend it to install Xcode `xcode-select --install`.
+  
+It may be required to install xcode via command line: `xcode-select --install`.
 
 ### Usage
 1. Add the `cmake` directory to your directory structure
@@ -45,7 +42,12 @@ I'd recommend it to install Xcode `xcode-select --install`.
 2. Create an executable `add_executable("DPPBot" <source_files>)` and call `DPP_ConfigureTarget("DPPBot")` on your target. 
 5. Done! Easy as that! Depending on your OS and Architecture you are ready to go.  
   
-You can change the values of `DPP_NO_VCPKG` to enable VCPKG build (this is not supported tho) and `DPP_CORO` to enable coroutines. Both accept "ON" and "OFF" as values.
+You can set these CMake options by adding something like `-DVAR=VALUE`. Rememeber to set it to `OFF` or `ON`.
+  
+|Option|Default value|Description|
+|---|---|---|
+|DPP_NO_VCPKG|ON|Prevents D++ to build a VCPKG build|
+|DPP_CORO|OFF|Enables coroutines on build 10.0.25+|
 
 ### Building
 Go into your project directory, create a new directory called `build` and run `cmake ..` inside of it.
