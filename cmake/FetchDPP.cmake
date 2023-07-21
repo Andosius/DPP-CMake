@@ -259,6 +259,10 @@ function(DPP_ConfigureTarget target_name)
 		"$<$<PLATFORM_ID:Linux>:-std=c++17;-Wall;-Wempty-body;-Wno-psabi;-Wunknown-pragmas;-Wignored-qualifiers;-Wimplicit-fallthrough;-Wmissing-field-initializers;-Wsign-compare;-Wtype-limits;-Wuninitialized;-Wshift-negative-value;-pthread;-fPIC;>"
 		"$<$<PLATFORM_ID:Linux>:$<$<CONFIG:Debug>:-g;-Og;>>"
 		"$<$<PLATFORM_ID:Linux>:$<$<CONFIG:Release>:-O3;>>"
+		
+		"$<$<PLATFORM_ID:Darwin>:-std=c++17;-Wall;-Wempty-body;-Wno-psabi;-Wunknown-pragmas;-Wignored-qualifiers;-Wimplicit-fallthrough;-Wmissing-field-initializers;-Wsign-compare;-Wtype-limits;-Wuninitialized;-Wshift-negative-value;-pthread;-fPIC;>"
+		"$<$<PLATFORM_ID:Darwin>:$<$<CONFIG:Debug>:-g;-Og;>>"
+		"$<$<PLATFORM_ID:Darwin>:$<$<CONFIG:Release>:-O3;>>"
 	)
 
 	target_include_directories("${target_name}" PRIVATE
@@ -266,6 +270,8 @@ function(DPP_ConfigureTarget target_name)
 		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Release>:${DPP_CONF_RELEASE_INC}>>"
 		
 		"$<$<PLATFORM_ID:Linux>:${CMAKE_INSTALL_PREFIX}/include>"
+		
+		"$<$<PLATFORM_ID:Darwin>:${CMAKE_INSTALL_PREFIX}/include>"
 	)
 	
 	target_link_options("${target_name}" PUBLIC
@@ -277,6 +283,8 @@ function(DPP_ConfigureTarget target_name)
 		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Release>:${DPP_CONF_RELEASE_LIB}>>"
 		
 		"$<$<PLATFORM_ID:Linux>:dpp>"
+		
+		"$<$<PLATFORM_ID:Darwin>:dpp>"
 	)
 
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
