@@ -38,16 +38,16 @@ set(DPP_CONF_RELEASE_LIB "")
 
 # Start collecting system information
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-	if(NOT EXISTS "/usr/local/lib/libdpp.dylib")
+	if(NOT EXISTS "${CMAKE_INSTALL_PREFIX}/lib/libdpp.dylib")
 		DPP_BuildFromSourceUnix()
 	endif()
 	
 	set(DPP_CONF_RELEASE_BIN "")
-	set(DPP_CONF_RELEASE_INC "/usr/local/include")
+	set(DPP_CONF_RELEASE_INC "${CMAKE_INSTALL_PREFIX}/include")
 	set(DPP_CONF_RELEASE_LIB "")
 	
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	if(NOT EXISTS "/usr/lib/libdpp.so")
+	if(NOT EXISTS "${CMAKE_INSTALL_PREFIX}/lib/libdpp.so")
 		set(DPP_SYSTEM_OS "linux")
 
 		# Get Linux Architecture first
@@ -164,7 +164,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	
 	# Set include directory only as we don't need to copy dependencies and can access lib via "dpp"
 	set(DPP_CONF_RELEASE_BIN "")
-	set(DPP_CONF_RELEASE_INC "/usr/include")
+	set(DPP_CONF_RELEASE_INC "${CMAKE_INSTALL_PREFIX}/include")
 	set(DPP_CONF_RELEASE_LIB "")
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -265,7 +265,7 @@ function(DPP_ConfigureTarget target_name)
 		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Debug>:${DPP_CONF_DEBUG_INC}>>"
 		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Release>:${DPP_CONF_RELEASE_INC}>>"
 		
-		"$<$<PLATFORM_ID:Linux>:/usr/include>"
+		"$<$<PLATFORM_ID:Linux>:${CMAKE_INSTALL_PREFIX}/include>"
 	)
 	
 	target_link_options("${target_name}" PUBLIC
