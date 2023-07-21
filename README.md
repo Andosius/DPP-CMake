@@ -26,8 +26,8 @@ To run the standard routine you need the following programs installed:
 To run the standard routine you need the following packages. You can install them by running:  
 `sudo apt-get -y install git make cmake gcc g++ libsodium-dev libopus-dev zlib1g-dev libssl-dev ninja-build pkg-config rpm`
 
-### RedHat/CentOS
-RedHat/CentOS or similar OSes are not supported yet. Feel free to create a PR!
+### RedHat/CentOS or similar
+You can try to find the Debian packages on your system and skip to the building process. DPP-CMake will try to build and implement it into your project.
 
 ### macOS dependencies
 To run the standard routine you need the following packages. You can install them by running:  

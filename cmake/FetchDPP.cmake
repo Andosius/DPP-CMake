@@ -131,9 +131,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	# Set full path to package
 	set(DPP_DOWNLOAD_LIB_PATH "${DPP_DOWNLOAD_DIR}/${DPP_TARGET_DOWNLOAD_FILE}")
 	
-	# Abort for .rpm machines. Maybe I'll find a suitable way to support them in the future
+	# Try to build libdpp on .rpm machines, we shouldn't worry about it
 	if(NOT ${DPP_DOWNLOAD_LIB_PATH} MATCHES ".*\\.deb$")
-		message(FATAL_ERROR ".rpm-packages are currently not supported! We are working on a solution, feel free to contribute and help via Github Issues!")
+		if(NOT EXISTS "${CMAKE_INSTALL_PREFIX}/lib/libdpp.so")
+			DPP_BuildFromSourceUnix()
+		endif()
+		
+		set(DPP_CONF_RELEASE_BIN "")
+		set(DPP_CONF_RELEASE_INC "${CMAKE_INSTALL_PREFIX}/include")
+		set(DPP_CONF_RELEASE_LIB "")
 	endif()
 	
 	# Create directory if it does not exist
