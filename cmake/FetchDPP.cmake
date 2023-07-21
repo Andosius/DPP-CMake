@@ -13,7 +13,7 @@ endif()
 include(cmake/FetchDPPActions.cmake)
 
 # DPP Configuration options
-option(DPP_NO_VCPKG "Enable or disable building for VCPKG" OFF)
+option(DPP_NO_VCPKG "Enable or disable building for VCPKG" ON)
 option(DPP_CORO "Enable or disable building coroutine features (>=C++20)" OFF)
 
 # System Info
