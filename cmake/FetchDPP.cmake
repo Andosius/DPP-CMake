@@ -38,18 +38,13 @@ set(DPP_CONF_RELEASE_LIB "")
 
 # Start collecting system information
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-	if(NOT DPP_SYSTEM_DARWIN_PREINSTALLED)
-		message(SEND_ERROR "D++ has no macOS packages available! Make sure to install all required build tools first!")
-		message(FATAL_ERROR "Set '-DDPP_SYSTEM_DARWIN_PREINSTALLED=ON' to bypass this warning and build libdpp from source!")
-	else()
-		if(NOT EXISTS "/usr/lib/libdpp.so")
-			DPP_BuildFromSourceUnix()
-		endif()
-		
-		set(DPP_CONF_RELEASE_BIN "")
-		set(DPP_CONF_RELEASE_INC "/usr/include")
-		set(DPP_CONF_RELEASE_LIB "")
+	if(NOT EXISTS "/usr/lib/libdpp.so")
+		DPP_BuildFromSourceUnix()
 	endif()
+	
+	set(DPP_CONF_RELEASE_BIN "")
+	set(DPP_CONF_RELEASE_INC "/usr/include")
+	set(DPP_CONF_RELEASE_LIB "")
 	
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	if(NOT EXISTS "/usr/lib/libdpp.so")

@@ -20,5 +20,5 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DDPP_SYSTEM_DARWIN_PREINSTALLED=ON
+        cmake ..
         cmake --build . -j
