@@ -38,12 +38,12 @@ set(DPP_CONF_RELEASE_LIB "")
 
 # Start collecting system information
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-	if(NOT EXISTS "/usr/lib/libdpp.so")
+	if(NOT EXISTS "/usr/local/lib/libdpp.dylib")
 		DPP_BuildFromSourceUnix()
 	endif()
 	
 	set(DPP_CONF_RELEASE_BIN "")
-	set(DPP_CONF_RELEASE_INC "/usr/include")
+	set(DPP_CONF_RELEASE_INC "/usr/local/include")
 	set(DPP_CONF_RELEASE_LIB "")
 	
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
