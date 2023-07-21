@@ -44,7 +44,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	
 	set(DPP_CONF_RELEASE_BIN "")
 	set(DPP_CONF_RELEASE_INC "${CMAKE_INSTALL_PREFIX}/include")
-	set(DPP_CONF_RELEASE_LIB "")
+	set(DPP_CONF_RELEASE_LIB "${CMAKE_INSTALL_PREFIX}/lib/libdpp.dylib")
 	
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	if(NOT EXISTS "${CMAKE_INSTALL_PREFIX}/lib/libdpp.so")
@@ -284,7 +284,7 @@ function(DPP_ConfigureTarget target_name)
 		
 		"$<$<PLATFORM_ID:Linux>:dpp>"
 		
-		"$<$<PLATFORM_ID:Darwin>:libdpp>"
+		"$<$<PLATFORM_ID:Darwin>:${DPP_CONF_RELEASE_LIB}>"
 	)
 
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
