@@ -284,7 +284,7 @@ function(DPP_ConfigureTarget target_name)
 		
 		"$<$<PLATFORM_ID:Linux>:dpp>"
 		
-		"$<$<PLATFORM_ID:Darwin>:dpp>"
+		"$<$<PLATFORM_ID:Darwin>:libdpp>"
 	)
 
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
