@@ -1,12 +1,13 @@
 name: macOS Build System
 
 on:
+  workflow_dispatch:
+    branches:
+      - master
   push:
     branches:
-      - main
-# on:
-#  workflow_dispatch:
-
+      - master
+      
 jobs:
   build:
     runs-on: macos-latest
