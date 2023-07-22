@@ -258,15 +258,15 @@ function(DPP_ConfigureTarget target_name)
 	)
 	
 	target_compile_options("${target_name}" PUBLIC
-		"$<$<PLATFORM_ID:Windows>:/bigobj;/sdl;/std:c++17;/Zc:preprocessor;/MP;>"
+		"$<$<PLATFORM_ID:Windows>:/bigobj;/sdl;/Zc:preprocessor;/MP;>"
 		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Debug>:/Od;/sdl;/DEBUG>>"
 		"$<$<PLATFORM_ID:Windows>:$<$<CONFIG:Release>:/O2;/Oi;/Oy;/GL;/Gy;>>"
 		
-		"$<$<PLATFORM_ID:Linux>:-std=c++17;-Wall;-Wempty-body;-Wno-psabi;-Wunknown-pragmas;-Wignored-qualifiers;-Wimplicit-fallthrough;-Wmissing-field-initializers;-Wsign-compare;-Wtype-limits;-Wuninitialized;-Wshift-negative-value;-pthread;-fPIC;>"
+		"$<$<PLATFORM_ID:Linux>:-pthread;-fPIC;>"
 		"$<$<PLATFORM_ID:Linux>:$<$<CONFIG:Debug>:-g;-Og;>>"
 		"$<$<PLATFORM_ID:Linux>:$<$<CONFIG:Release>:-O3;>>"
 		
-		"$<$<PLATFORM_ID:Darwin>:-std=c++17;-Wall;-Wempty-body;-Wno-psabi;-Wunknown-pragmas;-Wignored-qualifiers;-Wimplicit-fallthrough;-Wmissing-field-initializers;-Wsign-compare;-Wtype-limits;-Wuninitialized;-Wshift-negative-value;-pthread;-fPIC;>"
+		"$<$<PLATFORM_ID:Darwin>:-pthread;-fPIC;>"
 		"$<$<PLATFORM_ID:Darwin>:$<$<CONFIG:Debug>:-g;-Og;>>"
 		"$<$<PLATFORM_ID:Darwin>:$<$<CONFIG:Release>:-O3;>>"
 	)
