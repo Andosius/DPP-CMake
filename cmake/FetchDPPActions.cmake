@@ -17,6 +17,6 @@ function(DPP_BuildFromSourceUnix)
 	execute_process(COMMAND "cd" "${DPP_BUILD_HOME}" "&&" "cmake" "--build" "./build" "-j")
 	
 	# Install libdpp :)
-	execute_process(COMMAND "make" "-C" "${DPP_BUILD_HOME}/build" "install")
+	execute_process(COMMAND "sudo" "make" "-C" "${DPP_BUILD_HOME}/build" "install")
 
 endfunction()
