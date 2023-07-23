@@ -48,6 +48,7 @@ You can set these CMake options by adding something like `-DVAR=VALUE`. Rememebe
 |---|---|---|
 |DPP_NO_VCPKG|ON|Prevents D++ to build a VCPKG build|
 |DPP_CORO|OFF|Enables coroutines on build 10.0.25+|
+|DPP_FORCE_BUILD|OFF|Forces DPP-CMake to build it from sources|
 
 ### :triangular_ruler: Building
 Go into your project directory, create a new directory called `build` and run `cmake ..` inside of it.

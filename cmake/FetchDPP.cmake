@@ -15,6 +15,7 @@ include(cmake/FetchDPPActions.cmake)
 # DPP Configuration options
 option(DPP_NO_VCPKG "Enable or disable building for VCPKG" ON)
 option(DPP_CORO "Enable or disable building coroutine features (>=C++20)" OFF)
+option(DPP_FORCE_BUILD "Forces DPP-CMake to build from sources" OFF)
 
 # System Info
 set(DPP_SYSTEM_ARCH "")
@@ -38,7 +39,7 @@ set(DPP_CONF_RELEASE_LIB "")
 
 # Start collecting system information
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-	if(NOT EXISTS "${CMAKE_INSTALL_PREFIX}/lib/libdpp.dylib")
+	if(NOT EXISTS "${CMAKE_INSTALL_PREFIX}/lib/libdpp.dylib" OR DPP_FORCE_BUILD)
 		DPP_BuildFromSourceUnix()
 	endif()
 	
@@ -152,19 +153,23 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	endif()
 	
 	if(EXISTS "/etc/debian_version")
-		# Check file first and try to install it and check for errors.
-		execute_process(COMMAND "sudo" "dpkg-deb" "--control" "${DPP_DOWNLOAD_LIB_PATH}" RESULT_VARIABLE exit_status)
-		
-		# Check if we got any errors -> build by source
-		# Status 1: A check or assertion command returned false.
-		# Status 2: Fatal or unrecoverable error due to invalid command-line usage, or interactions with the system, such as accesses to the database, memory allocations, etc.
-		if(exit_status EQUAL "1" OR exit_status EQUAL "2")
-			execute_process(COMMAND "sudo" "apt" "purge" "-y" "libdpp")
+		if(NOT DPP_FORCE_BUILD)
+			# Check file first and try to install it and check for errors.
+			execute_process(COMMAND "sudo" "dpkg-deb" "--control" "${DPP_DOWNLOAD_LIB_PATH}" RESULT_VARIABLE exit_status)
 			
-			DPP_BuildFromSourceUnix()
-		# Everything seems fine => install it
+			# Check if we got any errors -> build by source
+			# Status 1: A check or assertion command returned false.
+			# Status 2: Fatal or unrecoverable error due to invalid command-line usage, or interactions with the system, such as accesses to the database, memory allocations, etc.
+			if(exit_status EQUAL "1" OR exit_status EQUAL "2")
+				execute_process(COMMAND "sudo" "apt" "purge" "-y" "libdpp")
+				
+				DPP_BuildFromSourceUnix()
+			# Everything seems fine => install it
+			else()
+				execute_process(COMMAND "sudo" "dpkg" "-i" "${DPP_DOWNLOAD_LIB_PATH}" RESULT_VARIABLE exit_status)
+			endif()
 		else()
-			execute_process(COMMAND "sudo" "dpkg" "-i" "${DPP_DOWNLOAD_LIB_PATH}" RESULT_VARIABLE exit_status)
+			DPP_BuildFromSourceUnix()
 		endif()
 	endif()
 	
