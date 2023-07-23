@@ -5,7 +5,7 @@ function(DPP_BuildFromSourceUnix)
 	execute_process(COMMAND "mkdir" "-p" "${DPP_BUILD_HOME}")
 
 	# Don't clone DPP if it already exists
-	if(NOT EXISTS "${DPP_BUILD_HOME}")
+	if(NOT EXISTS "${DPP_BUILD_HOME}/.git")
 		# Get the repository for the predefined version
 		execute_process(COMMAND "git" "clone" "-b" "v${DPP_VERSION}" "https://github.com/brainboxdotcc/DPP" "${DPP_BUILD_HOME}")
 	endif()
@@ -17,6 +17,6 @@ function(DPP_BuildFromSourceUnix)
 	execute_process(COMMAND "cd" "${DPP_BUILD_HOME}" "&&" "cmake" "--build" "./build" "-j")
 	
 	# Install libdpp :)
-	execute_process(COMMAND "make" "-C" "${DPP_BUILD_HOME}/build" "install")
+	execute_process(COMMAND "sudo" "make" "-C" "${DPP_BUILD_HOME}/build" "install")
 
 endfunction()
